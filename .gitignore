@@ -1,0 +1,9 @@
+# Bảng công việc nội bộ
+TASKS.md
+
+# Khóa riêng, seed phrase, biến môi trường
+.env
+.env.*
+
+# Node.js
+node_modules/

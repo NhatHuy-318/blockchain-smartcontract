@@ -122,6 +122,21 @@ Người dùng nhập mã lô hoặc quét QR. DApp đọc trạng thái và cá
 - **Xác minh**: đối chiếu mã băm của file với giá trị đã ghi ở đúng bước.
 - **Mã QR** dẫn thẳng tới trang truy xuất của một lô (làm nếu còn thời gian).
 
+## Cấu trúc thư mục
+
+```
+blockchain-smartcontract/
+├── contracts/        # Smart contract Solidity (BatchRegistry.sol), viết và kiểm thử trên Remix
+├── deployments/      # Địa chỉ contract, ABI, số khối deploy trên RSK Testnet
+├── dapp/             # Giao diện web (HTML/JavaScript, Web3.js, MetaMask)
+│   ├── css/
+│   └── js/
+├── server/           # JSON Server và db.json chứa siêu dữ liệu ngoài chuỗi
+├── sample-docs/      # Hồ sơ mẫu giả định (COA, phiếu kiểm nghiệm, tờ khai...) để demo băm và đối chiếu
+└── docs/             # Tài liệu thiết kế, kết quả kiểm thử
+    └── screenshots/  # Ảnh giao dịch trên explorer, ảnh giao diện cho báo cáo
+```
+
 ## Mạng thử nghiệm
 
 | Thông số | Giá trị |
