@@ -125,7 +125,30 @@ Khi demo, đặt `expiryDate` của một lô mẫu cách hiện tại vài phú
 
 ## 7. Thông báo lỗi
 
-Contract dùng `require` với thông điệp ngắn bằng tiếng Anh, tiền tố `BR:` (ví dụ `BR: not inspector`, `BR: wrong status`, `BR: expired`). DApp đổi các thông điệp này sang câu tiếng Việt dễ hiểu (T26). Danh sách thông điệp đầy đủ sẽ được chốt khi viết contract (T06).
+Contract dùng `require` với thông điệp ngắn bằng tiếng Anh, tiền tố `BR:` (ví dụ `BR: not inspector`, `BR: wrong status`, `BR: expired`). DApp đổi các thông điệp này sang câu tiếng Việt dễ hiểu (T26).
+
+| Thông điệp | Ý nghĩa | Gợi ý câu hiển thị trên DApp |
+|---|---|---|
+| `BR: not admin` | Người gọi không phải Admin | Chỉ Admin được thực hiện thao tác này |
+| `BR: wrong role` | Người gọi không có vai trò cần thiết | Ví của bạn không có quyền thực hiện bước này |
+| `BR: zero address` | Địa chỉ ví bằng 0 | Địa chỉ ví không hợp lệ |
+| `BR: invalid role` | Cấp vai trò `None` hoặc `Admin` | Vai trò không hợp lệ |
+| `BR: account has role` | Ví đã có vai trò | Ví này đã có vai trò, cần thu hồi trước khi cấp vai trò mới |
+| `BR: empty org name` | Tên đơn vị rỗng | Vui lòng nhập tên đơn vị |
+| `BR: no role` | Thu hồi ví chưa có vai trò | Ví này chưa có vai trò nào |
+| `BR: cannot revoke admin` | Thu hồi vai trò Admin | Không thể thu hồi vai trò Admin |
+| `BR: zero hash` | Chưa chọn file hồ sơ hoặc hash bằng 0 | Vui lòng chọn file hồ sơ |
+| `BR: batch not found` | Mã lô không tồn tại | Không tìm thấy lô |
+| `BR: wrong status` | Lô không ở trạng thái cho phép bước này | Lô chưa đến bước này hoặc đã qua bước này |
+| `BR: empty batchNo` | Số lô rỗng | Vui lòng nhập số lô |
+| `BR: empty material` | Tên nguyên liệu rỗng | Vui lòng nhập tên nguyên liệu |
+| `BR: batchNo used` | Số lô đã được đăng ký | Số lô này đã được đăng ký |
+| `BR: invalid dates` | Ngày sản xuất không trước hạn dùng | Ngày sản xuất phải trước hạn dùng |
+| `BR: expired` | Lô đã hết hạn | Lô đã hết hạn sử dụng |
+| `BR: not importer` | Ví được chỉ định làm Importer không có vai trò Importer | Ví nhập khẩu được chọn không có vai trò Importer |
+| `BR: empty reportNo` | Số phiếu kiểm nghiệm rỗng | Vui lòng nhập số phiếu kiểm nghiệm |
+
+Các thông điệp dự kiến cho T08 trở đi: `BR: not designated` (không phải Importer/Receiver được chỉ định cho lô), `BR: not receiver` (ví được chỉ định làm Receiver không có vai trò Receiver).
 
 ## 8. Việc cần làm sau khi chốt
 
