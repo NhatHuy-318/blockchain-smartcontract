@@ -31,7 +31,7 @@ enum Role { None, Admin, Manufacturer, Inspector, Importer, Receiver }
 
 - `grantRole` chỉ cấp cho ví đang ở `None`. Muốn đổi vai trò thì thu hồi trước rồi cấp lại.
 - `grantRole` không cấp được `Admin`.
-- Khi một ví bị thu hồi vai trò, mọi thao tác tiếp theo của ví đó đều bị từ chối, kể cả trên lô mà ví được chỉ định. Lô dừng ở trạng thái hiện tại; mô hình chưa có chức năng chỉ định lại ví khác.
+- Khi một ví bị thu hồi vai trò, mọi thao tác tiếp theo của ví đó đều bị từ chối, kể cả trên lô mà ví được chỉ định. Lô dừng ở trạng thái hiện tại; mô hình chưa có chức năng chỉ định lại ví khác. Nếu Admin cấp lại đúng vai trò cũ cho chính ví đó, ví lại thao tác được trên các lô đã được chỉ định trước đây.
 - Viewer không phải một vai trò trong contract: ai cũng đọc được dữ liệu trên chuỗi.
 
 ## 3. Trạng thái lô
@@ -147,8 +147,11 @@ Contract dùng `require` với thông điệp ngắn bằng tiếng Anh, tiền 
 | `BR: expired` | Lô đã hết hạn | Lô đã hết hạn sử dụng |
 | `BR: not importer` | Ví được chỉ định làm Importer không có vai trò Importer | Ví nhập khẩu được chọn không có vai trò Importer |
 | `BR: empty reportNo` | Số phiếu kiểm nghiệm rỗng | Vui lòng nhập số phiếu kiểm nghiệm |
+| `BR: not designated` | Người gọi không phải Importer/Receiver được chỉ định cho lô | Lô này không được chỉ định cho đơn vị của bạn |
+| `BR: empty origin` | Nước xuất xứ rỗng | Vui lòng nhập nước xuất xứ |
+| `BR: empty customsDeclNo` | Số tờ khai hải quan rỗng | Vui lòng nhập số tờ khai hải quan |
 
-Các thông điệp dự kiến cho T08 trở đi: `BR: not designated` (không phải Importer/Receiver được chỉ định cho lô), `BR: not receiver` (ví được chỉ định làm Receiver không có vai trò Receiver).
+Thông điệp dự kiến cho T10: `BR: not receiver` (ví được chỉ định làm Receiver không có vai trò Receiver).
 
 ## 8. Việc cần làm sau khi chốt
 

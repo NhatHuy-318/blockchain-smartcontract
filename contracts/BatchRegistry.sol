@@ -261,10 +261,38 @@ contract BatchRegistry {
     }
 
     // ---------------------------------------------------------------------
-    // Bước 3 đến 6: sẽ bổ sung ở các task sau
+    // Bước 3: nhập khẩu
     // ---------------------------------------------------------------------
 
-    // T09: recordImport(batchId, originCountry, customsDeclNo, importDate, docHash)
+    /// @notice Importer được chỉ định ghi thông tin nhập khẩu; lô sang Imported và Importer trở thành người giữ lô.
+    function recordImport(
+        uint256 batchId,
+        string calldata originCountry,
+        string calldata customsDeclNo,
+        uint64 importDate,
+        bytes32 docHash
+    )
+        external
+        onlyRole(Role.Importer)
+        batchExists(batchId)
+        inStatus(batchId, Status.Tested)
+        nonZeroHash(docHash)
+    {
+        Batch storage b = batches[batchId];
+        require(msg.sender == b.importer, "BR: not designated");
+        require(bytes(originCountry).length > 0, "BR: empty origin");
+        require(bytes(customsDeclNo).length > 0, "BR: empty customsDeclNo");
+        require(!_isExpired(batchId), "BR: expired");
+
+        b.status = Status.Imported;
+        b.holder = msg.sender;
+        emit BatchImported(batchId, msg.sender, docHash, originCountry, customsDeclNo, importDate, uint64(block.timestamp));
+    }
+
+    // ---------------------------------------------------------------------
+    // Bước 4 đến 6: sẽ bổ sung ở các task sau
+    // ---------------------------------------------------------------------
+
     // T10: initiateTransfer(batchId, receiver, docHash), confirmTransfer(batchId, docHash)
     // T44: recordReceivingInspection(batchId, passed, reportNo, inspectDate, docHash)
     // T14 (tùy chọn): cancelTransfer(batchId)
