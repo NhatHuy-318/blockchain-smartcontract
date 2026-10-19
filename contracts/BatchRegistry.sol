@@ -290,10 +290,49 @@ contract BatchRegistry {
     }
 
     // ---------------------------------------------------------------------
-    // Bước 4 đến 6: sẽ bổ sung ở các task sau
+    // Bước 4 và 5: chuyển giao hai chiều
     // ---------------------------------------------------------------------
 
-    // T10: initiateTransfer(batchId, receiver, docHash), confirmTransfer(batchId, docHash)
+    /// @notice Importer được chỉ định khởi tạo chuyển giao lô cho một Receiver đích danh.
+    /// @dev Trong lúc InTransfer, Importer vẫn là người giữ lô cho tới khi Receiver xác nhận.
+    function initiateTransfer(uint256 batchId, address receiver, bytes32 docHash)
+        external
+        onlyRole(Role.Importer)
+        batchExists(batchId)
+        inStatus(batchId, Status.Imported)
+        nonZeroHash(docHash)
+    {
+        Batch storage b = batches[batchId];
+        require(msg.sender == b.importer, "BR: not designated");
+        require(roles[receiver] == Role.Receiver, "BR: not receiver");
+        require(!_isExpired(batchId), "BR: expired");
+
+        b.status = Status.InTransfer;
+        b.receiver = receiver;
+        emit TransferInitiated(batchId, msg.sender, docHash, receiver, uint64(block.timestamp));
+    }
+
+    /// @notice Receiver được chỉ định xác nhận đã nhận đúng và đủ lô; Receiver trở thành người giữ lô.
+    /// @dev Không chặn lô hết hạn: hàng đã đến nơi thật, lô sẽ được xử lý ở Bước 6 (Quarantined).
+    function confirmTransfer(uint256 batchId, bytes32 docHash)
+        external
+        onlyRole(Role.Receiver)
+        batchExists(batchId)
+        inStatus(batchId, Status.InTransfer)
+        nonZeroHash(docHash)
+    {
+        Batch storage b = batches[batchId];
+        require(msg.sender == b.receiver, "BR: not designated");
+
+        b.status = Status.Received;
+        b.holder = msg.sender;
+        emit TransferConfirmed(batchId, msg.sender, docHash, uint64(block.timestamp));
+    }
+
+    // ---------------------------------------------------------------------
+    // Bước 6: sẽ bổ sung ở task sau
+    // ---------------------------------------------------------------------
+
     // T44: recordReceivingInspection(batchId, passed, reportNo, inspectDate, docHash)
     // T14 (tùy chọn): cancelTransfer(batchId)
 

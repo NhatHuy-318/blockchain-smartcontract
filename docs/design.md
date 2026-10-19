@@ -150,8 +150,7 @@ Contract dùng `require` với thông điệp ngắn bằng tiếng Anh, tiền 
 | `BR: not designated` | Người gọi không phải Importer/Receiver được chỉ định cho lô | Lô này không được chỉ định cho đơn vị của bạn |
 | `BR: empty origin` | Nước xuất xứ rỗng | Vui lòng nhập nước xuất xứ |
 | `BR: empty customsDeclNo` | Số tờ khai hải quan rỗng | Vui lòng nhập số tờ khai hải quan |
-
-Thông điệp dự kiến cho T10: `BR: not receiver` (ví được chỉ định làm Receiver không có vai trò Receiver).
+| `BR: not receiver` | Ví được chọn làm bên nhận không có vai trò Receiver | Ví bên nhận được chọn không có vai trò Receiver |
 
 ## 8. Việc cần làm sau khi chốt
 
