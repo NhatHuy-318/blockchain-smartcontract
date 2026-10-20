@@ -8,7 +8,7 @@ Một sổ đăng ký dựa trên smart contract, ghi lại lịch sử của m�
 
 ## Trạng thái hiện tại
 
-Dự án đang ở giai đoạn thiết kế: proposal đã xong, repo chưa có mã nguồn. Phần [Lộ trình](#lộ-trình) liệt kê những gì sẽ được xây dựng.
+Smart contract `BatchRegistry` đã viết xong đủ quy trình từ Bước 0 đến Bước 6 và đạt toàn bộ bộ kiểm thử trên chuỗi giả lập ([kết quả](docs/test-results.md)). Chưa deploy lên RSK Testnet; DApp chưa bắt đầu. Phần [Lộ trình](#lộ-trình) liệt kê các mốc tiếp theo.
 
 ## Nhóm thực hiện
 
@@ -133,9 +133,22 @@ blockchain-smartcontract/
 │   └── js/
 ├── server/           # JSON Server và db.json chứa siêu dữ liệu ngoài chuỗi
 ├── sample-docs/      # Hồ sơ mẫu giả định (COA, phiếu kiểm nghiệm, tờ khai...) để demo băm và đối chiếu
-└── docs/             # Tài liệu thiết kế, kết quả kiểm thử
+├── test/             # Bộ kiểm thử smart contract (chạy bằng npm test)
+└── docs/             # Tài liệu thiết kế, kết quả kiểm thử, hướng dẫn kiểm thử trên Remix
     └── screenshots/  # Ảnh giao dịch trên explorer, ảnh giao diện cho báo cáo
 ```
+
+## Chạy kiểm thử
+
+Cần Node.js 18 trở lên.
+
+```bash
+npm install
+npm test               # biên dịch contract bằng solc 0.8.19 (EVM paris) và chạy toàn bộ kiểm thử trên chuỗi giả lập Ganache
+npm run test:report    # chạy như trên và ghi bảng ca kiểm thử đại diện vào docs/test-results.md
+```
+
+Mỗi nhóm kiểm thử trong `test/` chạy trên một chuỗi mới. Bộ kiểm thử tua được thời gian của chuỗi để kiểm tra quy tắc hạn dùng. Hướng dẫn chạy tay một kịch bản trên Remix VM để chụp ảnh cho báo cáo: [docs/remix-testing.md](docs/remix-testing.md).
 
 ## Mạng thử nghiệm
 
