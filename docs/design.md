@@ -70,6 +70,9 @@ Mọi hàm ghi phải thỏa: đúng vai trò, đúng trạng thái, `docHash` k
 | `recordReceivingInspection` | `batchId`, `passed`, `reportNo`, `inspectDate`, `docHash` | Lô `Received`; người gọi là Receiver được chỉ định; nếu `passed` thì lô chưa hết hạn | `ReceivingInspected` |
 | `getBatch` | `batchId` | Đọc, không tốn phí | |
 | `getBatchCount` | | Đọc, không tốn phí | |
+| `getBatches` | `fromId`, `count` | Đọc một trang lô (tối đa `count` lô, bắt đầu từ `fromId`); trả mảng rỗng nếu `fromId` = 0 hoặc vượt số lô. DApp nên đọc khoảng 50 lô mỗi trang | |
+| `getBatchIdByNo` | `batchNo` | Tra `batchId` theo số lô, trả 0 nếu chưa có. Số lô phân biệt chữ hoa và chữ thường | |
+| `isExpired` | `batchId` | Lô đã hết hạn hay chưa | |
 | `getRole` | `account` | Đọc, DApp dùng để hiển thị vai trò | |
 
 ### Dữ liệu lưu trong storage

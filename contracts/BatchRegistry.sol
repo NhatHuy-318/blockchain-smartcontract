@@ -377,6 +377,21 @@ contract BatchRegistry {
         return batchCount;
     }
 
+    /// @notice Danh sách lô theo trang: tối đa `count` lô, bắt đầu từ `fromId` (tính từ 1).
+    /// @dev Trả mảng rỗng nếu `fromId` = 0 hoặc lớn hơn số lô. Mỗi lô có chuỗi `batchNo`,
+    ///      nên DApp nên đọc mỗi trang khoảng 50 lô để không vượt giới hạn gas của eth_call trên RPC công cộng.
+    function getBatches(uint256 fromId, uint256 count) external view returns (Batch[] memory page) {
+        if (fromId == 0 || fromId > batchCount || count == 0) {
+            return new Batch[](0);
+        }
+        uint256 available = batchCount - fromId + 1;
+        uint256 size = count < available ? count : available;
+        page = new Batch[](size);
+        for (uint256 i = 0; i < size; i++) {
+            page[i] = batches[fromId + i];
+        }
+    }
+
     /// @notice Tra batchId theo số lô; trả về 0 nếu chưa đăng ký.
     function getBatchIdByNo(string calldata batchNo) external view returns (uint256) {
         return batchIdByNo[keccak256(bytes(batchNo))];
