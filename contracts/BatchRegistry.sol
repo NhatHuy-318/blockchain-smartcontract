@@ -330,10 +330,35 @@ contract BatchRegistry {
     }
 
     // ---------------------------------------------------------------------
-    // Bước 6: sẽ bổ sung ở task sau
+    // Bước 6: kiểm tra tại nơi nhận
     // ---------------------------------------------------------------------
 
-    // T44: recordReceivingInspection(batchId, passed, reportNo, inspectDate, docHash)
+    /// @notice Receiver được chỉ định ghi kết quả kiểm tra chất lượng tại nơi nhận.
+    ///         Đạt thì lô sang Released (được đưa vào sử dụng), không đạt thì sang Quarantined (biệt trữ). Cả hai là trạng thái kết thúc.
+    /// @dev Chỉ ghi một lần. Lô hết hạn vẫn được ghi "không đạt" để có lối ra Quarantined.
+    function recordReceivingInspection(
+        uint256 batchId,
+        bool passed,
+        string calldata reportNo,
+        uint64 inspectDate,
+        bytes32 docHash
+    )
+        external
+        onlyRole(Role.Receiver)
+        batchExists(batchId)
+        inStatus(batchId, Status.Received)
+        nonZeroHash(docHash)
+    {
+        require(msg.sender == batches[batchId].receiver, "BR: not designated");
+        require(bytes(reportNo).length > 0, "BR: empty reportNo");
+        if (passed) {
+            require(!_isExpired(batchId), "BR: expired");
+        }
+
+        batches[batchId].status = passed ? Status.Released : Status.Quarantined;
+        emit ReceivingInspected(batchId, msg.sender, docHash, passed, reportNo, inspectDate, uint64(block.timestamp));
+    }
+
     // T14 (tùy chọn): cancelTransfer(batchId)
 
     // ---------------------------------------------------------------------

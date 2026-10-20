@@ -161,7 +161,18 @@ Lưu ý an toàn: chỉ dùng ví thử nghiệm, không dùng ví có tiền th
 | 9 | Milestone 2 | DApp chạy luồng chính từ đăng ký đến truy xuất, có đối chiếu mã băm |
 | 10 | Báo cáo hoàn chỉnh | Tìm kiếm, dữ liệu demo, kiểm thử tích hợp, báo cáo và slide cuối |
 
-Các hàm dự kiến của contract: `grantRole`, `registerBatch`, `recordTestResult`, `recordImport`, `initiateTransfer`, `confirmTransfer`, hàm ghi kết quả kiểm tra tại nơi nhận (Bước 6), và các hàm đọc `getBatch`, `getBatchCount`.
+Các hàm của contract [`BatchRegistry`](contracts/BatchRegistry.sol) (đã viết xong, đang kiểm thử):
+
+| Bước | Hàm |
+|---|---|
+| 0 | `grantRole`, `revokeRole` |
+| 1 | `registerBatch` |
+| 2 | `recordTestResult` |
+| 3 | `recordImport` |
+| 4 | `initiateTransfer` |
+| 5 | `confirmTransfer` |
+| 6 | `recordReceivingInspection` |
+| Đọc | `getRole`, `getBatch`, `getBatchCount`, `getBatchIdByNo`, `isExpired` |
 
 ## Giới hạn
 
