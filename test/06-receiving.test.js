@@ -39,6 +39,8 @@ module.exports = {
     await t.reverts('lô không tồn tại', qc(99, true).call({ from: a.rcv }), 'BR: batch not found');
     await t.reverts('hash phiếu bằng 0', qc(b3, true, { h: ZERO_HASH }).call({ from: a.rcv }), 'BR: zero hash');
     await t.reverts('số phiếu rỗng', qc(b3, true, { rep: '' }).call({ from: a.rcv }), 'BR: empty reportNo');
+    await t.reverts('ngày kiểm tra = 0', qc(b3, true, { date: 0 }).call({ from: a.rcv }), 'BR: invalid date');
+    await t.reverts('ngày kiểm tra trong tương lai', qc(b3, true, { date: (await env.now()) + 86400 }).call({ from: a.rcv }), 'BR: invalid date');
     t.ok('lô bị từ chối vẫn ở Received', (await status(b3)) === Status.Received);
   },
 };

@@ -18,8 +18,9 @@ Trạng thái: **bản nháp, chờ cả nhóm xác nhận.**
 | D8 | Hạn dùng | **Contract kiểm tra hạn dùng** (xem mục 5) |
 | D9 | Phân quyền ví | **Mỗi ví giữ đúng một vai trò; Admin được thu hồi vai trò** |
 | D10 | Admin | Ví deploy contract là Admin duy nhất. Không cấp thêm Admin, không tự thu hồi |
-| D11 | Định danh lô | `batchId` là số tự tăng từ 1 do contract cấp; `batchNo` là số lô do nhà sản xuất đặt, không được trùng |
-| D12 | Ngày tháng | Unix timestamp tính bằng giây (`uint64`), DApp tự đổi sang ngày giờ Việt Nam khi hiển thị |
+| D11 | Định danh lô | `batchId` là số tự tăng từ 1 do contract cấp; `batchNo` là số lô do nhà sản xuất đặt, không được trùng. `batchNo` chỉ gồm A–Z, 0–9 và `- _ / .`, tối đa 32 ký tự (T13); DApp tự đổi sang chữ hoa trước khi gửi |
+| D12 | Ngày tháng | Unix timestamp tính bằng giây (`uint64`), DApp tự đổi sang ngày giờ Việt Nam khi hiển thị. Ngày do người dùng nhập (sản xuất, kiểm nghiệm, nhập khẩu, kiểm tra) phải khác 0 và không sau thời điểm ghi (T13) |
+| D15 | Hủy chuyển giao | Importer đã khởi tạo được hủy chuyển giao đang `InTransfer`, lô quay về `Imported` và giao lại được (T14) |
 | D13 | Trình biên dịch | Solidity `0.8.19`, EVM version `paris` (Rootstock chưa hỗ trợ opcode `PUSH0` mà bản 0.8.20 trở lên sinh ra) |
 | D14 | Tên vai trò | Dùng `Receiver` thay cho "Distributor/Receiver" trong proposal |
 
@@ -31,7 +32,7 @@ enum Role { None, Admin, Manufacturer, Inspector, Importer, Receiver }
 
 - `grantRole` chỉ cấp cho ví đang ở `None`. Muốn đổi vai trò thì thu hồi trước rồi cấp lại.
 - `grantRole` không cấp được `Admin`.
-- Khi một ví bị thu hồi vai trò, mọi thao tác tiếp theo của ví đó đều bị từ chối, kể cả trên lô mà ví được chỉ định. Lô dừng ở trạng thái hiện tại; mô hình chưa có chức năng chỉ định lại ví khác. Nếu Admin cấp lại đúng vai trò cũ cho chính ví đó, ví lại thao tác được trên các lô đã được chỉ định trước đây.
+- Khi một ví bị thu hồi vai trò, mọi thao tác tiếp theo của ví đó đều bị từ chối, kể cả trên lô mà ví được chỉ định. Lô dừng ở trạng thái hiện tại; mô hình chưa có chức năng chỉ định lại ví khác, trừ trường hợp Receiver bị thu hồi khi lô đang `InTransfer`: Importer hủy chuyển giao rồi giao cho Receiver khác. Nếu Admin cấp lại đúng vai trò cũ cho chính ví đó, ví lại thao tác được trên các lô đã được chỉ định trước đây.
 - Viewer không phải một vai trò trong contract: ai cũng đọc được dữ liệu trên chuỗi.
 
 ## 3. Trạng thái lô
@@ -48,7 +49,7 @@ enum Status { None, Registered, Tested, Rejected, Imported, InTransfer, Received
 | `Imported` | `InTransfer` | `initiateTransfer` | Importer được chỉ định |
 | `InTransfer` | `Received` | `confirmTransfer` | Receiver được chỉ định |
 | `Received` | `Released` / `Quarantined` | `recordReceivingInspection` | Receiver được chỉ định |
-| `InTransfer` | `Imported` | `cancelTransfer` (tùy chọn, T14) | Importer được chỉ định |
+| `InTransfer` | `Imported` | `cancelTransfer` (T14) | Importer được chỉ định |
 
 `Rejected`, `Released`, `Quarantined` là trạng thái kết thúc.
 
@@ -62,16 +63,17 @@ Mọi hàm ghi phải thỏa: đúng vai trò, đúng trạng thái, `docHash` k
 |---|---|---|---|
 | `grantRole` | `account`, `role`, `orgName`, `licenseHash` | Chỉ Admin; `account` đang ở `None`; `role` khác `None` và `Admin` | `RoleGranted` |
 | `revokeRole` | `account` | Chỉ Admin; `account` có vai trò và không phải Admin | `RoleRevoked` |
-| `registerBatch` | `batchNo`, `materialName`, `mfgDate`, `expiryDate`, `storageConditions`, `importer`, `docHash` | `batchNo` chưa dùng; `mfgDate < expiryDate`; chưa hết hạn; `importer` có vai trò Importer | `BatchRegistered` |
-| `recordTestResult` | `batchId`, `passed`, `reportNo`, `testDate`, `docHash` | Lô `Registered`; nếu `passed` thì lô chưa hết hạn | `BatchTested` |
-| `recordImport` | `batchId`, `originCountry`, `customsDeclNo`, `importDate`, `docHash` | Lô `Tested`; người gọi là Importer được chỉ định; chưa hết hạn | `BatchImported` |
+| `registerBatch` | `batchNo`, `materialName`, `mfgDate`, `expiryDate`, `storageConditions`, `importer`, `docHash` | `batchNo` đúng định dạng (D11) và chưa dùng; `mfgDate < expiryDate`; `mfgDate` hợp lệ (D12); chưa hết hạn; `importer` có vai trò Importer | `BatchRegistered` |
+| `recordTestResult` | `batchId`, `passed`, `reportNo`, `testDate`, `docHash` | Lô `Registered`; `testDate` hợp lệ; nếu `passed` thì lô chưa hết hạn | `BatchTested` |
+| `recordImport` | `batchId`, `originCountry`, `customsDeclNo`, `importDate`, `docHash` | Lô `Tested`; người gọi là Importer được chỉ định; `importDate` hợp lệ; chưa hết hạn | `BatchImported` |
 | `initiateTransfer` | `batchId`, `receiver`, `docHash` | Lô `Imported`; người gọi là Importer được chỉ định; `receiver` có vai trò Receiver; chưa hết hạn | `TransferInitiated` |
 | `confirmTransfer` | `batchId`, `docHash` | Lô `InTransfer`; người gọi là Receiver được chỉ định | `TransferConfirmed` |
-| `recordReceivingInspection` | `batchId`, `passed`, `reportNo`, `inspectDate`, `docHash` | Lô `Received`; người gọi là Receiver được chỉ định; nếu `passed` thì lô chưa hết hạn | `ReceivingInspected` |
+| `cancelTransfer` | `batchId`, `docHash` (hash biên bản hủy) | Lô `InTransfer`; người gọi là Importer được chỉ định. Lô về `Imported`, xóa Receiver | `TransferCancelled` |
+| `recordReceivingInspection` | `batchId`, `passed`, `reportNo`, `inspectDate`, `docHash` | Lô `Received`; người gọi là Receiver được chỉ định; `inspectDate` hợp lệ; nếu `passed` thì lô chưa hết hạn | `ReceivingInspected` |
 | `getBatch` | `batchId` | Đọc, không tốn phí | |
 | `getBatchCount` | | Đọc, không tốn phí | |
 | `getBatches` | `fromId`, `count` | Đọc một trang lô (tối đa `count` lô, bắt đầu từ `fromId`); trả mảng rỗng nếu `fromId` = 0 hoặc vượt số lô. DApp nên đọc khoảng 50 lô mỗi trang | |
-| `getBatchIdByNo` | `batchNo` | Tra `batchId` theo số lô, trả 0 nếu chưa có. Số lô phân biệt chữ hoa và chữ thường | |
+| `getBatchIdByNo` | `batchNo` | Tra `batchId` theo số lô, trả 0 nếu chưa có. Số lô luôn là chữ hoa nên DApp đổi chuỗi tìm kiếm sang chữ hoa trước khi tra | |
 | `isExpired` | `batchId` | Lô đã hết hạn hay chưa | |
 | `getRole` | `account` | Đọc, DApp dùng để hiển thị vai trò | |
 
@@ -110,10 +112,13 @@ Lô **hết hạn** khi `block.timestamp > expiryDate`.
 | Ghi kiểm nghiệm **Không đạt** (Bước 2) | Cho phép, lô sang `Rejected` |
 | Nhập khẩu, khởi tạo chuyển giao | Từ chối |
 | Xác nhận tiếp nhận (Bước 5) | **Cho phép**, vì hàng đã đến nơi thật |
+| Hủy chuyển giao | Cho phép |
 | Kiểm tra tại nơi nhận **Đạt** (Bước 6) | Từ chối |
 | Kiểm tra tại nơi nhận **Không đạt** (Bước 6) | Cho phép, lô sang `Quarantined` |
 
-Lý do: chặn mọi bước đẩy lô tiến lên, nhưng luôn để lại một lối ra hợp lệ (`Rejected` hoặc `Quarantined`), để lô hết hạn không bị kẹt giữa chừng.
+Lý do: chặn mọi bước đẩy lô tiến lên. Lô hết hạn ở `Registered` vẫn có lối ra `Rejected`, lô đang `InTransfer` hoặc `Received` có lối ra `Quarantined`.
+
+Lô hết hạn khi đang ở `Tested` hoặc `Imported` thì **dừng tại chỗ**: không nhập khẩu, không giao đi được và không có trạng thái kết thúc riêng (rà soát ở T13). Nhóm chấp nhận điều này vì trên thực tế lô nằm lại kho và bị tiêu hủy ngoài hệ thống; DApp hiển thị nhãn "Đã hết hạn" để người xem biết lô không còn đi tiếp.
 
 Khi demo, đặt `expiryDate` của một lô mẫu cách hiện tại vài phút để thấy contract từ chối.
 
@@ -154,6 +159,8 @@ Contract dùng `require` với thông điệp ngắn bằng tiếng Anh, tiền 
 | `BR: empty origin` | Nước xuất xứ rỗng | Vui lòng nhập nước xuất xứ |
 | `BR: empty customsDeclNo` | Số tờ khai hải quan rỗng | Vui lòng nhập số tờ khai hải quan |
 | `BR: not receiver` | Ví được chọn làm bên nhận không có vai trò Receiver | Ví bên nhận được chọn không có vai trò Receiver |
+| `BR: invalid batchNo` | Số lô có ký tự ngoài A–Z, 0–9, `- _ / .` hoặc dài quá 32 ký tự | Số lô chỉ gồm chữ in hoa, số và các ký tự - _ / . (tối đa 32 ký tự) |
+| `BR: invalid date` | Ngày nhập bằng 0 hoặc sau thời điểm ghi | Ngày không hợp lệ: không được để trống hoặc chọn ngày trong tương lai |
 
 ## 8. Việc cần làm sau khi chốt
 

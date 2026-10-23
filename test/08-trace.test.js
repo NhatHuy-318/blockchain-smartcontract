@@ -63,6 +63,6 @@ module.exports = {
     await t.reverts('isExpired lô không tồn tại', c.methods.isExpired(99).call(), 'BR: batch not found');
     t.ok('getBatchIdByNo: tra đúng; số lô chưa có trả 0', Number(await c.methods.getBatchIdByNo('LOT-005').call()) === 5
       && Number(await c.methods.getBatchIdByNo('KHONG-CO').call()) === 0);
-    t.ok('getBatchIdByNo phân biệt chữ hoa/thường (cần chốt ở T13)', Number(await c.methods.getBatchIdByNo('lot-005').call()) === 0);
+    t.ok('getBatchIdByNo với chữ thường trả 0 (số lô luôn là chữ hoa, DApp đổi trước khi tra)', Number(await c.methods.getBatchIdByNo('lot-005').call()) === 0);
   },
 };

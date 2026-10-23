@@ -36,6 +36,8 @@ module.exports = {
     await t.reverts('batchId = 0', test(0, true).call({ from: a.insp }), 'BR: batch not found');
     await t.reverts('hash phiếu bằng 0', test(b3, true, { h: ZERO_HASH }).call({ from: a.insp }), 'BR: zero hash');
     await t.reverts('số phiếu rỗng', test(b3, true, { rep: '' }).call({ from: a.insp }), 'BR: empty reportNo');
+    await t.reverts('ngày kiểm nghiệm = 0', test(b3, true, { date: 0 }).call({ from: a.insp }), 'BR: invalid date');
+    await t.reverts('ngày kiểm nghiệm trong tương lai', test(b3, true, { date: (await env.now()) + 86400 }).call({ from: a.insp }), 'BR: invalid date');
     t.ok('lô bị từ chối vẫn ở Registered', (await status(b3)) === Status.Registered);
 
     await c.methods.revokeRole(a.insp2).send({ from: a.admin, gas: 3e5 });

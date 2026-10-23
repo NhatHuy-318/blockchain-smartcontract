@@ -34,6 +34,8 @@ module.exports = {
     await t.reverts('hash tờ khai bằng 0', imp(b2, { h: ZERO_HASH }).call({ from: a.imp }), 'BR: zero hash');
     await t.reverts('nước xuất xứ rỗng', imp(b2, { origin: '' }).call({ from: a.imp }), 'BR: empty origin');
     await t.reverts('số tờ khai rỗng', imp(b2, { decl: '' }).call({ from: a.imp }), 'BR: empty customsDeclNo');
+    await t.reverts('ngày nhập khẩu = 0', imp(b2, { date: 0 }).call({ from: a.imp }), 'BR: invalid date');
+    await t.reverts('ngày nhập khẩu trong tương lai', imp(b2, { date: (await env.now()) + 86400 }).call({ from: a.imp }), 'BR: invalid date');
     const g2 = await c.methods.getBatch(b2).call();
     t.ok('lô bị từ chối vẫn ở Tested, người giữ vẫn là Manufacturer', Number(g2.status) === Status.Tested && g2.holder === a.mfr);
 

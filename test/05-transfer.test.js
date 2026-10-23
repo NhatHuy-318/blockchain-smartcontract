@@ -72,5 +72,35 @@ module.exports = {
     await conf(b4).send({ from: a.rcv2, gas: 3e5 });
     g = await get(b4);
     t.ok('Receiver 2 xác nhận và trở thành người giữ lô', Number(g.status) === Status.Received && g.holder === a.rcv2);
+
+    // Hủy chuyển giao (T14)
+    const cancelDoc = '0x' + 'cc'.repeat(32);
+    const cancel = (id, h = cancelDoc) => c.methods.cancelTransfer(id, h);
+    const b5 = await make('LOT-5', 'InTransfer');
+    await c.methods.revokeRole(a.rcv).send({ from: a.admin, gas: 3e5 });
+    await t.reverts('Receiver khác không hủy được', cancel(b5).call({ from: a.rcv2 }), 'BR: wrong role');
+    await t.reverts('Importer khác không hủy được', cancel(b5).call({ from: a.imp2 }), 'BR: not designated');
+    await t.reverts('hash biên bản hủy bằng 0', cancel(b5, ZERO_HASH).call({ from: a.imp }), 'BR: zero hash');
+    const tx3 = await cancel(b5).send({ from: a.imp, gas: 3e5 });
+    const e3 = tx3.events.TransferCancelled.returnValues;
+    g = await get(b5);
+    t.ok('Receiver bị thu hồi, Importer hủy chuyển giao: lô về Imported, xóa Receiver, người giữ vẫn là Importer',
+      Number(g.status) === Status.Imported && g.receiver === ZERO_ADDRESS && g.holder === a.imp
+      && Number(e3.batchId) === b5 && e3.importer === a.imp && e3.docHash === cancelDoc && e3.previousReceiver === a.rcv,
+      { id: 'TC35', expected: 'Trạng thái quay về Imported; event TransferCancelled ghi Receiver cũ' });
+    await t.reverts('hủy lại lô đã về Imported', cancel(b5).call({ from: a.imp }), 'BR: wrong status');
+    await init(b5, a.rcv2).send({ from: a.imp, gas: 3e5 });
+    await conf(b5).send({ from: a.rcv2, gas: 3e5 });
+    t.ok('sau khi hủy, giao lại cho Receiver khác và được xác nhận', (await status(b5)) === Status.Received && (await get(b5)).holder === a.rcv2);
+    await grant(a.rcv, Role.Receiver, 'Nhà máy dược Delta');
+
+    const b6 = await make('LOT-6', 'InTransfer');
+    await cancel(b6).send({ from: a.imp, gas: 3e5 });
+    await t.reverts('Receiver cũ không xác nhận được lô đã hủy giao', conf(b6).call({ from: a.rcv }), 'BR: wrong status');
+    await t.reverts('hủy lô chưa giao (Imported)', cancel(b2).call({ from: a.imp }), 'BR: wrong status');
+    await t.reverts('hủy lô đã Received', cancel(b1).call({ from: a.imp }), 'BR: wrong status');
+    await t.reverts('hủy lô không tồn tại', cancel(99).call({ from: a.imp }), 'BR: batch not found');
+    const logs = await c.getPastEvents('TransferCancelled', { filter: { batchId: b5 }, fromBlock: 0 });
+    t.ok('lọc TransferCancelled theo batchId', logs.length === 1);
   },
 };

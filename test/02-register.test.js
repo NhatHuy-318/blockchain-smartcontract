@@ -47,6 +47,21 @@ module.exports = {
     await t.reverts('Importer chỉ định là ví không vai trò', reg({ no: 'X1', imp: a.other }).call({ from: a.mfr }), 'BR: not importer');
     await t.reverts('Importer chỉ định là địa chỉ 0', reg({ no: 'X1', imp: ZERO_ADDRESS }).call({ from: a.mfr }), 'BR: not importer');
 
+    // Định dạng số lô (T13): chỉ A-Z, 0-9 và - _ / . , tối đa 32 ký tự
+    await t.reverts('số lô có chữ thường', reg({ no: 'pen-k-20260901-001' }).call({ from: a.mfr }), 'BR: invalid batchNo',
+      { id: 'TC36', expected: 'Từ chối: BR: invalid batchNo (chặn trùng lô khác nhau chỉ ở chữ hoa/thường)' });
+    await t.reverts('số lô có khoảng trắng', reg({ no: ' PEN-K-20260901-001' }).call({ from: a.mfr }), 'BR: invalid batchNo');
+    await t.reverts('số lô có ký tự #', reg({ no: 'PEN#001' }).call({ from: a.mfr }), 'BR: invalid batchNo');
+    await t.reverts('số lô có chữ tiếng Việt', reg({ no: 'LÔ-001' }).call({ from: a.mfr }), 'BR: invalid batchNo');
+    await t.reverts('số lô 33 ký tự', reg({ no: 'A'.repeat(33) }).call({ from: a.mfr }), 'BR: invalid batchNo');
+    t.ok('số lô 32 ký tự và đủ các ký tự cho phép (A-Z 0-9 - _ / .) đăng ký được',
+      Number(await reg({ no: 'AZ09-_/.' + 'X'.repeat(24) }).call({ from: a.mfr })) > 0);
+
+    // Ngày sản xuất (T13): khác 0 và không sau thời điểm ghi
+    await t.reverts('ngày sản xuất = 0', reg({ no: 'X1', mfg: 0 }).call({ from: a.mfr }), 'BR: invalid date',
+      { id: 'TC37', expected: 'Từ chối: BR: invalid date (ngày bằng 0 hoặc trong tương lai)' });
+    await t.reverts('ngày sản xuất trong tương lai', reg({ no: 'X1', mfg: t0 + 30 * DAY }).call({ from: a.mfr }), 'BR: invalid date');
+
     await reg({ no: 'PEN-K-20260901-002' }).send({ from: a.mfr2, gas: 1e6 });
     t.ok('lô thứ hai của nhà sản xuất khác có batchId = 2', Number(await c.methods.getBatchIdByNo('PEN-K-20260901-002').call()) === 2);
 

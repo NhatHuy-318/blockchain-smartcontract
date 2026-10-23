@@ -2,10 +2,10 @@
 
 File này do `npm run test:report` tự sinh từ lần chạy thật; không sửa tay.
 
-- Ngày chạy: 20/10/2026
-- Trình biên dịch: 0.8.19+commit.7dd6d404.Emscripten.clang, EVM `paris`; bytecode runtime 18030 byte; không có opcode PUSH0
+- Ngày chạy: 23/10/2026
+- Trình biên dịch: 0.8.19+commit.7dd6d404.Emscripten.clang, EVM `paris`; bytecode runtime 20142 byte; không có opcode PUSH0
 - Môi trường: chuỗi giả lập cục bộ Ganache, mỗi nhóm kiểm thử chạy trên một chuỗi mới
-- Tổng cộng: **147/147** kiểm tra đạt; **34/34** ca kiểm thử đại diện đạt
+- Tổng cộng: **172/172** kiểm tra đạt; **37/37** ca kiểm thử đại diện đạt
 
 ## Ca kiểm thử đại diện
 
@@ -45,16 +45,19 @@ File này do `npm run test:report` tự sinh từ lần chạy thật; không s�
 | TC32 | Truy xuất và hàm đọc | vòng đời lô PEN-K-20260901-001: đủ 6 event theo đúng thứ tự, mỗi event mang đúng hash hồ sơ của bước | 6 event từ BatchRegistered tới ReceivingInspected, đúng thứ tự và đúng hash | Đạt |
 | TC33 | Truy xuất và hàm đọc | tìm theo hash tờ khai: ra đúng lô và đúng bước | Tìm thấy lô PEN-K-20260901-001 ở bước BatchImported | Đạt |
 | TC34 | Truy xuất và hàm đọc | phân trang 4 + 4 + 1: các trang nối nhau, không trùng, không sót | 3 trang nối đủ 9 lô, không trùng, không sót | Đạt |
+| TC35 | Bước 4–5: Chuyển giao | Receiver bị thu hồi, Importer hủy chuyển giao: lô về Imported, xóa Receiver, người giữ vẫn là Importer | Trạng thái quay về Imported; event TransferCancelled ghi Receiver cũ | Đạt |
+| TC36 | Bước 1: Đăng ký lô | số lô có chữ thường | Từ chối: BR: invalid batchNo (chặn trùng lô khác nhau chỉ ở chữ hoa/thường) | Đạt |
+| TC37 | Bước 1: Đăng ký lô | ngày sản xuất = 0 | Từ chối: BR: invalid date (ngày bằng 0 hoặc trong tương lai) | Đạt |
 
 ## Số kiểm tra theo nhóm
 
 | Nhóm | Số kiểm tra | Đạt |
 |---|---|---|
 | Bước 0: Phân quyền | 16 | 16 |
-| Bước 1: Đăng ký lô | 21 | 21 |
-| Bước 2: Kiểm nghiệm | 17 | 17 |
-| Bước 3: Nhập khẩu | 17 | 17 |
-| Bước 4–5: Chuyển giao | 33 | 33 |
-| Bước 6: Kiểm tra tại nơi nhận | 19 | 19 |
+| Bước 1: Đăng ký lô | 29 | 29 |
+| Bước 2: Kiểm nghiệm | 19 | 19 |
+| Bước 3: Nhập khẩu | 19 | 19 |
+| Bước 4–5: Chuyển giao | 44 | 44 |
+| Bước 6: Kiểm tra tại nơi nhận | 21 | 21 |
 | Quy tắc hạn dùng | 10 | 10 |
 | Truy xuất và hàm đọc | 14 | 14 |

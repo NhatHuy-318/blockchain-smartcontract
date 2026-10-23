@@ -95,9 +95,10 @@ contract BatchRegistry {
         uint64 at
     );
 
-    // Bước 4 và 5 (T10)
+    // Bước 4 và 5 (T10), hủy chuyển giao (T14)
     event TransferInitiated(uint256 indexed batchId, address indexed from, bytes32 indexed docHash, address to, uint64 at);
     event TransferConfirmed(uint256 indexed batchId, address indexed receiver, bytes32 indexed docHash, uint64 at);
+    event TransferCancelled(uint256 indexed batchId, address indexed importer, bytes32 indexed docHash, address previousReceiver, uint64 at);
 
     // Bước 6 (T44)
     event ReceivingInspected(
@@ -197,10 +198,12 @@ contract BatchRegistry {
         bytes32 docHash
     ) external onlyRole(Role.Manufacturer) nonZeroHash(docHash) returns (uint256 batchId) {
         require(bytes(batchNo).length > 0, "BR: empty batchNo");
+        _requireValidBatchNo(batchNo);
         require(bytes(materialName).length > 0, "BR: empty material");
         bytes32 noKey = keccak256(bytes(batchNo));
         require(batchIdByNo[noKey] == 0, "BR: batchNo used");
         require(mfgDate < expiryDate, "BR: invalid dates");
+        _requireValidDate(mfgDate);
         require(block.timestamp <= expiryDate, "BR: expired");
         require(roles[importer] == Role.Importer, "BR: not importer");
 
@@ -252,6 +255,7 @@ contract BatchRegistry {
         nonZeroHash(docHash)
     {
         require(bytes(reportNo).length > 0, "BR: empty reportNo");
+        _requireValidDate(testDate);
         if (passed) {
             require(!_isExpired(batchId), "BR: expired");
         }
@@ -282,6 +286,7 @@ contract BatchRegistry {
         require(msg.sender == b.importer, "BR: not designated");
         require(bytes(originCountry).length > 0, "BR: empty origin");
         require(bytes(customsDeclNo).length > 0, "BR: empty customsDeclNo");
+        _requireValidDate(importDate);
         require(!_isExpired(batchId), "BR: expired");
 
         b.status = Status.Imported;
@@ -329,6 +334,26 @@ contract BatchRegistry {
         emit TransferConfirmed(batchId, msg.sender, docHash, uint64(block.timestamp));
     }
 
+    /// @notice Importer đã khởi tạo hủy chuyển giao (ví dụ Receiver không xác nhận hoặc bị thu hồi vai trò).
+    ///         Lô quay về Imported và có thể được giao lại cho Receiver khác.
+    /// @param docHash hash biên bản hủy giao / văn bản nêu lý do hủy
+    /// @dev Không chặn lô hết hạn: hủy là lối thoát khỏi InTransfer, không đẩy lô tiến lên.
+    function cancelTransfer(uint256 batchId, bytes32 docHash)
+        external
+        onlyRole(Role.Importer)
+        batchExists(batchId)
+        inStatus(batchId, Status.InTransfer)
+        nonZeroHash(docHash)
+    {
+        Batch storage b = batches[batchId];
+        require(msg.sender == b.importer, "BR: not designated");
+
+        address previousReceiver = b.receiver;
+        b.status = Status.Imported;
+        b.receiver = address(0);
+        emit TransferCancelled(batchId, msg.sender, docHash, previousReceiver, uint64(block.timestamp));
+    }
+
     // ---------------------------------------------------------------------
     // Bước 6: kiểm tra tại nơi nhận
     // ---------------------------------------------------------------------
@@ -351,6 +376,7 @@ contract BatchRegistry {
     {
         require(msg.sender == batches[batchId].receiver, "BR: not designated");
         require(bytes(reportNo).length > 0, "BR: empty reportNo");
+        _requireValidDate(inspectDate);
         if (passed) {
             require(!_isExpired(batchId), "BR: expired");
         }
@@ -358,8 +384,6 @@ contract BatchRegistry {
         batches[batchId].status = passed ? Status.Released : Status.Quarantined;
         emit ReceivingInspected(batchId, msg.sender, docHash, passed, reportNo, inspectDate, uint64(block.timestamp));
     }
-
-    // T14 (tùy chọn): cancelTransfer(batchId)
 
     // ---------------------------------------------------------------------
     // Hàm đọc
@@ -407,5 +431,22 @@ contract BatchRegistry {
 
     function _isExpired(uint256 batchId) internal view returns (bool) {
         return block.timestamp > batches[batchId].expiryDate;
+    }
+
+    /// @dev Ngày do người dùng nhập phải khác 0 và không sau thời điểm ghi.
+    function _requireValidDate(uint64 date) internal view {
+        require(date != 0 && date <= block.timestamp, "BR: invalid date");
+    }
+
+    /// @dev Số lô chỉ gồm A-Z, 0-9 và - _ / . , tối đa 32 ký tự, để "PEN-001" và "pen-001"
+    ///      không thành hai lô khác nhau. DApp tự đổi sang chữ hoa trước khi gửi.
+    function _requireValidBatchNo(string memory batchNo) internal pure {
+        bytes memory s = bytes(batchNo);
+        require(s.length <= 32, "BR: invalid batchNo");
+        for (uint256 i = 0; i < s.length; i++) {
+            bytes1 c = s[i];
+            bool ok = (c >= "A" && c <= "Z") || (c >= "0" && c <= "9") || c == "-" || c == "_" || c == "/" || c == ".";
+            require(ok, "BR: invalid batchNo");
+        }
     }
 }

@@ -182,7 +182,7 @@ Các hàm của contract [`BatchRegistry`](contracts/BatchRegistry.sol) (đã vi
 | 1 | `registerBatch` |
 | 2 | `recordTestResult` |
 | 3 | `recordImport` |
-| 4 | `initiateTransfer` |
+| 4 | `initiateTransfer`, `cancelTransfer` (hủy giao, lô về Đã nhập khẩu) |
 | 5 | `confirmTransfer` |
 | 6 | `recordReceivingInspection` |
 | Đọc | `getRole`, `getBatch`, `getBatches`, `getBatchCount`, `getBatchIdByNo`, `isExpired` |
